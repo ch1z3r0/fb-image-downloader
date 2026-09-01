@@ -1,5 +1,6 @@
 /**
  * Facebook Post Image Downloader Pro - Client Application Logic
+ * High-End State Handling, Skeletons, Session HUD, Floating Action Dock & Lightbox
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -34,10 +35,15 @@ document.addEventListener("DOMContentLoaded", () => {
         concurrencyLabel: document.getElementById("concurrencyLabel"),
         customOutputDir: document.getElementById("customOutputDir"),
 
-        // Progress Section
+        // Progress Section & Live Session HUD
         progressSection: document.getElementById("extractionProgressSection"),
         progressStatusText: document.getElementById("progressStatusText"),
         progressTimer: document.getElementById("progressTimer"),
+        btnToggleLogs: document.getElementById("btnToggleLogs"),
+        chevronLogs: document.getElementById("chevronLogs"),
+        sessionLogDrawer: document.getElementById("sessionLogDrawer"),
+        sessionLogConsole: document.getElementById("sessionLogConsole"),
+        btnCopyLogs: document.getElementById("btnCopyLogs"),
         steps: [
             document.getElementById("step1"),
             document.getElementById("step2"),
@@ -67,6 +73,16 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedCountZip: document.getElementById("selectedCountZip"),
         selectedCountFiles: document.getElementById("selectedCountFiles"),
         btnOpenFolder: document.getElementById("btnOpenFolder"),
+        galleryOutputDir: document.getElementById("galleryOutputDir"),
+
+        // Floating Bottom Action Dock
+        floatingActionDock: document.getElementById("floatingActionDock"),
+        dockSelectedCount: document.getElementById("dockSelectedCount"),
+        dockCountZip: document.getElementById("dockCountZip"),
+        btnDockSelectAll: document.getElementById("btnDockSelectAll"),
+        btnDockClearAll: document.getElementById("btnDockClearAll"),
+        btnDockDownloadZip: document.getElementById("btnDockDownloadZip"),
+        btnDockSaveLocal: document.getElementById("btnDockSaveLocal"),
 
         // Folder Guide Modal
         folderGuideModal: document.getElementById("folderGuideModal"),
@@ -79,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lightboxImg: document.getElementById("lightboxImg"),
         lightboxIndex: document.getElementById("lightboxIndex"),
         lightboxDimensions: document.getElementById("lightboxDimensions"),
+        lightboxMime: document.getElementById("lightboxMime"),
         btnLightboxPrev: document.getElementById("btnLightboxPrev"),
         btnLightboxNext: document.getElementById("btnLightboxNext"),
         btnLightboxClose: document.getElementById("btnLightboxClose"),
@@ -103,34 +120,94 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchSystemHealth();
 
     // 2. Settings Drawer Toggle
-    elements.btnTextToggle.addEventListener("click", () => {
-        const isCollapsed = elements.settingsDrawer.classList.toggle("collapsed");
-        elements.toggleChevron.style.transform = isCollapsed ? "rotate(0deg)" : "rotate(180deg)";
-    });
-
-    elements.concurrencySlider.addEventListener("input", (e) => {
-        elements.concurrencyLabel.textContent = `${e.target.value} concurrent streams`;
-    });
-
-    // 3. Paste & Sample Helpers
-    elements.btnPaste.addEventListener("click", async () => {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (text) {
-                elements.fbUrlInput.value = text.trim();
-                showToast("URL pasted from clipboard", "info");
+    if (elements.btnTextToggle) {
+        elements.btnTextToggle.addEventListener("click", () => {
+            const isCollapsed = elements.settingsDrawer.classList.toggle("collapsed");
+            if (elements.toggleChevron) {
+                elements.toggleChevron.style.transform = isCollapsed ? "rotate(0deg)" : "rotate(180deg)";
             }
-        } catch (err) {
-            showToast("Clipboard access denied. Please paste manually.", "warning");
-        }
-    });
+        });
+    }
 
-    elements.btnSample.addEventListener("click", () => {
-        elements.fbUrlInput.value = "https://www.facebook.com/NASA/photos/a.10150125867961772/10160163935296772/";
-        showToast("Sample Facebook post loaded", "info");
-    });
+    if (elements.concurrencySlider) {
+        elements.concurrencySlider.addEventListener("input", (e) => {
+            elements.concurrencyLabel.textContent = `${e.target.value} concurrent streams`;
+        });
+    }
 
-    // 4. Scrape Form Submission
+    // 3. Session Log HUD Drawer Toggle & Copy
+    if (elements.btnToggleLogs) {
+        elements.btnToggleLogs.addEventListener("click", () => {
+            const isCollapsed = elements.sessionLogDrawer.classList.toggle("collapsed");
+            if (elements.chevronLogs) {
+                elements.chevronLogs.style.transform = isCollapsed ? "rotate(0deg)" : "rotate(180deg)";
+            }
+        });
+    }
+
+    if (elements.btnCopyLogs) {
+        elements.btnCopyLogs.addEventListener("click", async () => {
+            const logText = elements.sessionLogConsole ? elements.sessionLogConsole.innerText : "";
+            if (logText) {
+                try {
+                    await navigator.clipboard.writeText(logText);
+                    showToast("Engine session logs copied to clipboard", "success");
+                } catch (err) {
+                    showToast("Failed to copy logs to clipboard", "warning");
+                }
+            }
+        });
+    }
+
+    function appendLog(message, type = "info") {
+        if (!elements.sessionLogConsole) return;
+        const line = document.createElement("div");
+        line.className = "log-line";
+        const time = new Date().toLocaleTimeString();
+        let tagClass = "log-tag-scraper";
+        if (type === "playwright") tagClass = "log-tag-playwright";
+        if (type === "success") tagClass = "log-tag-success";
+        if (type === "warn") tagClass = "log-tag-warn";
+        if (type === "error") tagClass = "log-tag-error";
+
+        line.innerHTML = `<span class="text-muted">[${time}]</span> <span class="${tagClass}">${escapeHtml(message)}</span>`;
+        elements.sessionLogConsole.appendChild(line);
+        elements.sessionLogConsole.scrollTop = elements.sessionLogConsole.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+        return (str || "").replace(/[&<>"']/g, (m) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[m]);
+    }
+
+    // 4. Paste & Sample Helpers
+    if (elements.btnPaste) {
+        elements.btnPaste.addEventListener("click", async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    elements.fbUrlInput.value = text.trim();
+                    showToast("URL pasted from clipboard", "info");
+                }
+            } catch (err) {
+                showToast("Clipboard access denied. Please paste manually.", "warning");
+            }
+        });
+    }
+
+    if (elements.btnSample) {
+        elements.btnSample.addEventListener("click", () => {
+            elements.fbUrlInput.value = "https://www.facebook.com/NASA/photos/a.10150125867961772/10160163935296772/";
+            showToast("Sample Facebook post loaded", "info");
+        });
+    }
+
+    // 5. Scrape Form Submission with Skeleton State
     elements.scrapeForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const url = elements.fbUrlInput.value.trim();
@@ -141,6 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         setScrapingState(true);
         startProgressStepper();
+        renderSkeletons(6);
+
+        appendLog(`[Scraper] Initialized extraction for target: ${url}`, "playwright");
 
         try {
             const res = await fetch("/api/scrape", {
@@ -148,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     url: url,
-                    headless: elements.headlessToggle.checked,
+                    headless: elements.headlessToggle ? elements.headlessToggle.checked : true,
                 }),
             });
 
@@ -162,14 +242,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!data.items || data.items.length === 0) {
                 if (data.is_private_or_deleted) {
+                    appendLog("[Error] Post is private, restricted, or has been deleted.", "error");
                     showToast(
                         data.status_message || "🔒 This post is private, restricted, or has been deleted on Facebook.",
                         "error"
                     );
                 } else {
+                    appendLog("[Warning] No high-resolution images discovered on target post.", "warn");
                     showToast(data.status_message || "No high-resolution images found on this post.", "warning");
                 }
                 elements.gallerySection.classList.add("hidden");
+                updateSelectedCount();
                 return;
             }
 
@@ -177,32 +260,63 @@ document.addEventListener("DOMContentLoaded", () => {
             state.scrapedItems = data.items;
             state.selectedIndices = new Set(data.items.map((_, idx) => idx));
 
+            appendLog(`[Success] Discovered and resolved ${data.items.length} uncompressed photo asset(s) (Post ID: ${data.post_id})`, "success");
             renderGallery(data);
             showToast(`Successfully extracted ${data.items.length} high-res photo(s)!`, "success");
 
         } catch (error) {
             stopProgressStepper(false);
+            appendLog(`[Error] ${error.message || "Failed to extract Facebook photos."}`, "error");
             console.error("Scrape error:", error);
             showToast(error.message || "Failed to extract Facebook photos.", "error");
+            elements.gallerySection.classList.add("hidden");
+            updateSelectedCount();
         } finally {
             state.isScraping = false;
             setScrapingState(false);
         }
     });
 
-    // 5. Gallery Rendering
+    // 6. Fluid Shimmer/Skeleton Loading State
+    function renderSkeletons(count = 6) {
+        elements.gallerySection.classList.remove("hidden");
+        elements.galleryTitle.textContent = "Inspecting Facebook Media Grid...";
+        elements.galleryPostId.textContent = "Playwright Automation Active";
+        elements.photosGrid.innerHTML = "";
+        if (elements.floatingActionDock) elements.floatingActionDock.classList.add("hidden");
+
+        for (let i = 0; i < count; i++) {
+            const skel = document.createElement("div");
+            skel.className = "photo-card-skeleton";
+            skel.innerHTML = `
+                <div class="skeleton-shimmer skeleton-img">
+                    <i data-lucide="image" class="icon-sm"></i>
+                </div>
+                <div class="skeleton-footer">
+                    <div class="skeleton-shimmer skeleton-pill"></div>
+                    <div class="skeleton-actions">
+                        <div class="skeleton-shimmer skeleton-btn"></div>
+                        <div class="skeleton-shimmer skeleton-btn"></div>
+                    </div>
+                </div>
+            `;
+            elements.photosGrid.appendChild(skel);
+        }
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    // 7. Gallery Rendering
     function renderGallery(data) {
         elements.gallerySection.classList.remove("hidden");
         elements.galleryTitle.textContent = `Found ${data.items.length} High-Res Photo${data.items.length > 1 ? "s" : ""}`;
         elements.galleryPostId.textContent = `Post ID: ${data.post_id || "facebook_post"}`;
-        updateSelectedCount();
-
         elements.photosGrid.innerHTML = "";
 
         data.items.forEach((item, idx) => {
             const card = document.createElement("div");
             card.className = "photo-card selected";
             card.id = `card-${idx}`;
+            card.style.animationDelay = `${idx * 35}ms`;
 
             const dimText = item.width && item.height ? `${item.width} × ${item.height}` : "HD Photo";
             const extText = (item.mime_type || "image/jpeg").split("/")[1]?.toUpperCase() || "JPG";
@@ -214,12 +328,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <span class="card-badge-index">#${idx + 1}</span>
                     <img src="${item.url}" alt="Post Photo #${idx + 1}" class="card-img" loading="lazy" />
-                    <span class="card-badge-dim">${dimText} • ${extText}</span>
+                    <div class="card-img-overlay"></div>
+                    <div class="card-hover-actions">
+                        <button type="button" class="btn-hover-action btn-view-single" data-index="${idx}" title="Preview full-resolution photo">
+                            <i data-lucide="maximize-2" class="icon-sm"></i> Inspect
+                        </button>
+                        <button type="button" class="btn-hover-action btn-dl-single" data-index="${idx}" title="Download single photo">
+                            <i data-lucide="download" class="icon-sm"></i> Save
+                        </button>
+                    </div>
+                    <span class="card-badge-dim font-mono">${dimText} • ${extText}</span>
                 </div>
                 <div class="card-footer">
-                    <span class="card-meta-text">photo_${String(idx + 1).padStart(3, "0")}</span>
+                    <span class="card-meta-text font-mono">photo_${String(idx + 1).padStart(3, "0")}</span>
                     <div class="card-actions">
-                        <button type="button" class="btn-card-action btn-view-single" data-index="${idx}" title="Zoom Photo">
+                        <button type="button" class="btn-card-action btn-view-single" data-index="${idx}" title="Inspect Photo">
                             <i data-lucide="maximize-2"></i>
                         </button>
                         <button type="button" class="btn-card-action btn-dl-single" data-index="${idx}" title="Download">
@@ -241,17 +364,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Attach Card Listeners
         attachCardListeners();
+        updateSelectedCount();
 
         // Scroll smoothly to gallery
         elements.gallerySection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
+    function toggleCardSelection(idx, isSelected) {
+        const card = document.getElementById(`card-${idx}`);
+        const cb = card ? card.querySelector(".card-checkbox") : null;
+        if (isSelected) {
+            state.selectedIndices.add(idx);
+            if (card) card.classList.add("selected");
+            if (cb) cb.checked = true;
+        } else {
+            state.selectedIndices.delete(idx);
+            if (card) card.classList.remove("selected");
+            if (cb) cb.checked = false;
+        }
+        updateSelectedCount();
+    }
+
     function attachCardListeners() {
-        // Image Click opens Lightbox
-        document.querySelectorAll(".card-img-container").forEach((el) => {
-            el.addEventListener("click", (e) => {
-                if (e.target.classList.contains("card-checkbox")) return;
-                const idx = parseInt(el.getAttribute("data-index"), 10);
+        document.querySelectorAll(".photo-card").forEach((card) => {
+            const idx = parseInt(card.id.replace("card-", ""), 10);
+
+            // Clicking anywhere on card toggles selection
+            card.addEventListener("click", (e) => {
+                // Ignore clicks originating from action buttons or checkbox directly
+                if (e.target.closest("button") || e.target.classList.contains("card-checkbox")) {
+                    return;
+                }
+                const isSelected = state.selectedIndices.has(idx);
+                toggleCardSelection(idx, !isSelected);
+            });
+
+            // Double clicking opens fullscreen Lightbox
+            card.addEventListener("dblclick", (e) => {
+                if (e.target.closest("button")) return;
                 openLightbox(idx);
             });
         });
@@ -260,19 +410,11 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".card-checkbox").forEach((cb) => {
             cb.addEventListener("change", (e) => {
                 const idx = parseInt(cb.getAttribute("data-index"), 10);
-                const card = document.getElementById(`card-${idx}`);
-                if (cb.checked) {
-                    state.selectedIndices.add(idx);
-                    card.classList.add("selected");
-                } else {
-                    state.selectedIndices.delete(idx);
-                    card.classList.remove("selected");
-                }
-                updateSelectedCount();
+                toggleCardSelection(idx, cb.checked);
             });
         });
 
-        // View single button
+        // View/Inspect single button
         document.querySelectorAll(".btn-view-single").forEach((btn) => {
             btn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -305,22 +447,50 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 6. Multi-Select & Batch Actions
-    elements.btnSelectAll.addEventListener("click", () => {
-        const allSelected = state.selectedIndices.size === state.scrapedItems.length;
-        if (allSelected) {
-            state.selectedIndices.clear();
-            document.querySelectorAll(".card-checkbox").forEach((cb) => (cb.checked = false));
-            document.querySelectorAll(".photo-card").forEach((c) => c.classList.remove("selected"));
-            elements.selectAllText.textContent = "Select All";
-        } else {
-            state.selectedIndices = new Set(state.scrapedItems.map((_, i) => i));
-            document.querySelectorAll(".card-checkbox").forEach((cb) => (cb.checked = true));
-            document.querySelectorAll(".photo-card").forEach((c) => c.classList.add("selected"));
-            elements.selectAllText.textContent = "Deselect All";
-        }
+    // 8. Multi-Select & Batch Actions
+    function selectAllPhotos() {
+        state.selectedIndices = new Set(state.scrapedItems.map((_, i) => i));
+        document.querySelectorAll(".card-checkbox").forEach((cb) => (cb.checked = true));
+        document.querySelectorAll(".photo-card").forEach((c) => c.classList.add("selected"));
         updateSelectedCount();
+    }
+
+    function clearAllSelection() {
+        state.selectedIndices.clear();
+        document.querySelectorAll(".card-checkbox").forEach((cb) => (cb.checked = false));
+        document.querySelectorAll(".photo-card").forEach((c) => c.classList.remove("selected"));
+        updateSelectedCount();
+    }
+
+    elements.btnSelectAll.addEventListener("click", () => {
+        const allSelected = state.selectedIndices.size === state.scrapedItems.length && state.scrapedItems.length > 0;
+        if (allSelected) {
+            clearAllSelection();
+        } else {
+            selectAllPhotos();
+        }
     });
+
+    // Floating Bottom Dock Shortcuts
+    if (elements.btnDockSelectAll) {
+        elements.btnDockSelectAll.addEventListener("click", selectAllPhotos);
+    }
+
+    if (elements.btnDockClearAll) {
+        elements.btnDockClearAll.addEventListener("click", clearAllSelection);
+    }
+
+    if (elements.btnDockDownloadZip) {
+        elements.btnDockDownloadZip.addEventListener("click", () => {
+            if (elements.btnDownloadZip) elements.btnDownloadZip.click();
+        });
+    }
+
+    if (elements.btnDockSaveLocal) {
+        elements.btnDockSaveLocal.addEventListener("click", () => {
+            if (elements.btnDownloadLocal) elements.btnDownloadLocal.click();
+        });
+    }
 
     function updateSelectedCount() {
         const count = state.selectedIndices.size;
@@ -328,19 +498,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if (elements.selectedCountPicker) elements.selectedCountPicker.textContent = count;
         if (elements.selectedCountZip) elements.selectedCountZip.textContent = count;
         if (elements.selectedCountFiles) elements.selectedCountFiles.textContent = count;
+        if (elements.dockSelectedCount) elements.dockSelectedCount.textContent = count;
+        if (elements.dockCountZip) elements.dockCountZip.textContent = count;
 
         if (elements.btnChooseFolder) elements.btnChooseFolder.disabled = count === 0;
         if (elements.btnDownloadLocal) elements.btnDownloadLocal.disabled = count === 0;
         if (elements.btnDownloadZip) elements.btnDownloadZip.disabled = count === 0;
         if (elements.btnDownloadIndividual) elements.btnDownloadIndividual.disabled = count === 0;
 
+        // Floating bottom dock visibility
+        if (elements.floatingActionDock) {
+            if (count >= 1 && !elements.gallerySection.classList.contains("hidden")) {
+                elements.floatingActionDock.classList.remove("hidden");
+            } else {
+                elements.floatingActionDock.classList.add("hidden");
+            }
+        }
+
         if (elements.selectAllText) {
             elements.selectAllText.textContent =
-                count === state.scrapedItems.length ? "Deselect All" : "Select All";
+                count === state.scrapedItems.length && count > 0 ? "Deselect All" : "Select All";
         }
     }
 
-    // 7. Save Directly into User-Selected Local Folder (Native File System Access)
+    // 9. Save Directly into User-Selected Local Folder (Native File System Access)
     if (elements.btnChooseFolder) {
         elements.btnChooseFolder.addEventListener("click", async () => {
             const selectedItems = Array.from(state.selectedIndices).map((i) => state.scrapedItems[i]);
@@ -385,12 +566,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch (err) {
                     if (err.name !== "AbortError") {
                         console.error("Directory picker error:", err);
-                        // Open helper guide
                         if (elements.folderGuideModal) elements.folderGuideModal.classList.remove("hidden");
                     }
                 }
             } else {
-                // Not in Secure Context (HTTP LAN) or unsupported browser - open guide modal
                 if (elements.folderGuideModal) {
                     elements.folderGuideModal.classList.remove("hidden");
                 } else {
@@ -426,7 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 7b. Download ZIP in Browser
+    // 10. Download ZIP in Browser
     elements.btnDownloadZip.addEventListener("click", async () => {
         const selectedItems = Array.from(state.selectedIndices).map((i) => state.scrapedItems[i]);
         if (selectedItems.length === 0) return;
@@ -441,62 +620,61 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    post_id: state.currentPostId || "photos",
+                    post_id: state.currentPostId || "facebook_photos",
                     items: selectedItems,
                     folder_name: albumName || null,
                 }),
             });
 
-            if (!res.ok) throw new Error("ZIP creation failed on server.");
+            if (!res.ok) throw new Error("ZIP generation failed on server.");
 
             const blob = await res.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
+            const blobUrl = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = downloadUrl;
-            a.download = albumName ? `${albumName}.zip` : `facebook_${state.currentPostId || "photos"}.zip`;
+            a.style.display = "none";
+            a.href = blobUrl;
+            a.download = `${albumName || `facebook_${state.currentPostId || "photos"}`}.zip`;
             document.body.appendChild(a);
             a.click();
-            a.remove();
-            window.URL.revokeObjectURL(downloadUrl);
 
-            showToast("ZIP archive downloaded to your device!", "success");
+            setTimeout(() => {
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            }, 2000);
+
+            showToast(`ZIP Archive downloaded with ${selectedItems.length} photos!`, "success");
         } catch (err) {
-            console.error("ZIP download failed:", err);
+            console.error("ZIP download error:", err);
             showToast("Failed to download ZIP archive.", "error");
         }
     });
 
-    // 7b. Download Individual Files to Client Device
-    if (elements.btnDownloadIndividual) {
-        elements.btnDownloadIndividual.addEventListener("click", async () => {
-            const selectedIndices = Array.from(state.selectedIndices);
-            if (selectedIndices.length === 0) return;
+    // 11. Download Individual Files
+    elements.btnDownloadIndividual.addEventListener("click", async () => {
+        const selectedItems = Array.from(state.selectedIndices).map((i) => state.scrapedItems[i]);
+        if (selectedItems.length === 0) return;
 
-            showToast(`Downloading ${selectedIndices.length} individual image(s) to your device...`, "info");
-            for (let i = 0; i < selectedIndices.length; i++) {
-                const idx = selectedIndices[i];
-                await downloadSingleItem(idx);
-                // Stagger requests to ensure browser queues downloads smoothly
-                await new Promise((r) => setTimeout(r, 220));
-            }
-            showToast(`Completed sending ${selectedIndices.length} photo(s) to your device!`, "success");
-        });
-    }
+        showToast(`Starting download of ${selectedItems.length} individual images...`, "info");
+        for (let i = 0; i < selectedItems.length; i++) {
+            const item = selectedItems[i];
+            const ext = getExtensionFromUrl(item.url);
+            const filename = item.suggested_filename || `photo_${String(i + 1).padStart(3, "0")}${ext}`;
+            const downloadUrl = `/api/download-single?url=${encodeURIComponent(item.url)}&filename=${encodeURIComponent(filename)}`;
 
-    // 8. Download to Local Disk with Customizable Folder
-    elements.galleryOutputDir = document.getElementById("galleryOutputDir");
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
 
-    // Sync path inputs
-    if (elements.customOutputDir && elements.galleryOutputDir) {
-        elements.customOutputDir.addEventListener("input", (e) => {
-            elements.galleryOutputDir.value = e.target.value;
-        });
-        elements.galleryOutputDir.addEventListener("input", (e) => {
-            elements.customOutputDir.value = e.target.value;
-        });
-    }
+            await new Promise((r) => setTimeout(r, 400));
+        }
+        showToast(`Triggered ${selectedItems.length} browser file downloads!`, "success");
+    });
 
-    // Path Presets Chips
+    // 12. Save to Host Server Location
     document.querySelectorAll(".preset-chip").forEach((chip) => {
         chip.addEventListener("click", () => {
             const path = chip.getAttribute("data-path");
@@ -550,7 +728,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 9. Open Folder in Finder/Explorer
+    // 13. Open Folder in Finder/Explorer
     elements.btnOpenFolder.addEventListener("click", async () => {
         if (!state.lastDownloadOutputDir) return;
         try {
@@ -612,7 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 10. Lightbox Logic
+    // 14. Fullscreen Lightbox Modal
     function openLightbox(index) {
         if (!state.scrapedItems[index]) return;
         state.currentLightboxIndex = index;
@@ -633,7 +811,12 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.lightboxImg.src = item.url;
         elements.lightboxIndex.textContent = `Photo ${state.currentLightboxIndex + 1} of ${state.scrapedItems.length}`;
         elements.lightboxDimensions.textContent =
-            item.width && item.height ? `${item.width} × ${item.height} px` : "High Resolution";
+            item.width && item.height ? `${item.width} × ${item.height} px` : "Full Resolution";
+        
+        if (elements.lightboxMime) {
+            const ext = (item.mime_type || "image/jpeg").split("/")[1]?.toUpperCase() || "JPG";
+            elements.lightboxMime.textContent = ext;
+        }
     }
 
     elements.btnLightboxPrev.addEventListener("click", () => {
@@ -671,15 +854,38 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Keyboard Shortcuts for Lightbox
+    // 15. Global Keyboard Shortcuts
     window.addEventListener("keydown", (e) => {
-        if (elements.lightboxModal.classList.contains("hidden")) return;
-        if (e.key === "Escape") closeLightbox();
-        if (e.key === "ArrowLeft") elements.btnLightboxPrev.click();
-        if (e.key === "ArrowRight") elements.btnLightboxNext.click();
+        // Lightbox controls
+        if (!elements.lightboxModal.classList.contains("hidden")) {
+            if (e.key === "Escape") closeLightbox();
+            if (e.key === "ArrowLeft") elements.btnLightboxPrev.click();
+            if (e.key === "ArrowRight") elements.btnLightboxNext.click();
+            return;
+        }
+
+        // Health / Folder guide modal close on Escape
+        if (!elements.healthModal.classList.contains("hidden") && e.key === "Escape") {
+            elements.healthModal.classList.add("hidden");
+            return;
+        }
+        if (elements.folderGuideModal && !elements.folderGuideModal.classList.contains("hidden") && e.key === "Escape") {
+            elements.folderGuideModal.classList.add("hidden");
+            return;
+        }
+
+        // Cmd/Ctrl + A selects all photos when gallery is displayed
+        if ((e.metaKey || e.ctrlKey) && (e.key === "a" || e.key === "A")) {
+            if (!elements.gallerySection.classList.contains("hidden") && state.scrapedItems.length > 0) {
+                if (document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+                    e.preventDefault();
+                    selectAllPhotos();
+                }
+            }
+        }
     });
 
-    // 11. System Health Modal
+    // 16. System Health Modal
     elements.btnHealthModal.addEventListener("click", () => {
         fetchSystemHealth();
         elements.healthModal.classList.remove("hidden");
@@ -721,7 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 12. Helper Animations & Stepper
+    // 17. Helper Animations & Stepper
     function setScrapingState(isScraping) {
         elements.btnSubmit.disabled = isScraping;
         const btnText = elements.btnSubmit.querySelector(".btn-text");
@@ -745,11 +951,26 @@ document.addEventListener("DOMContentLoaded", () => {
             seconds++;
             elements.progressTimer.textContent = `${seconds}s elapsed`;
 
-            // Step progression simulation
-            if (seconds === 1) activateStep(0);
-            if (seconds === 2) activateStep(1);
-            if (seconds === 4) activateStep(2);
-            if (seconds === 6) activateStep(3);
+            // Step progression & real-time log emissions
+            if (seconds === 1) {
+                activateStep(0);
+                appendLog("[Playwright] Launching Chromium browser automation engine...", "playwright");
+            }
+            if (seconds === 2) {
+                activateStep(1);
+                appendLog("[Network] Navigating to Facebook post and bypassing consent/login dialogs...", "playwright");
+            }
+            if (seconds === 3) {
+                appendLog("[GraphQL] Intercepting post payload & resolving attached photo IDs...", "scraper");
+            }
+            if (seconds === 4) {
+                activateStep(2);
+                appendLog("[Scraper] Expanding carousel collage & fetching uncompressed CDN assets...", "scraper");
+            }
+            if (seconds === 6) {
+                activateStep(3);
+                appendLog("[CDN] Traversing high-resolution photo nodes...", "scraper");
+            }
         }, 1000);
     }
 
@@ -779,7 +1000,7 @@ document.addEventListener("DOMContentLoaded", () => {
             elements.progressStatusText.textContent = "Extraction completed successfully!";
             setTimeout(() => {
                 elements.progressSection.classList.add("hidden");
-            }, 2500);
+            }, 3000);
         } else {
             elements.progressSection.classList.add("hidden");
         }

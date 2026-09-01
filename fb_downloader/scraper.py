@@ -23,6 +23,7 @@ from .config import (
     THEATER_NEXT_BUTTON_SELECTORS,
     ScraperConfig,
 )
+from .fastpath import FastPathExtractor
 from .models import MediaItem, PostMetadata, ScrapeResult
 from .url_utils import extract_post_id, normalize_facebook_url
 
@@ -106,7 +107,18 @@ class FacebookScraper:
         logger.debug("Playwright browser closed.")
 
     async def scrape_post(self, url: str) -> ScrapeResult:
-        """Main scraping workflow for a given Facebook post URL."""
+        """Main scraping workflow for a given Facebook post URL with fast-path optimization."""
+        # 1. Fast-Path Extractor: Try async HTTP scraping first to avoid Playwright launch overhead
+        fast_path = FastPathExtractor(timeout_seconds=12.0)
+        fast_result = await fast_path.extract(url)
+        if fast_result and (len(fast_result.items) > 0 or fast_result.is_private_or_deleted):
+            logger.info(
+                f"[Pipeline] Fast-path successfully extracted {len(fast_result.items)} photo(s) without browser automation."
+            )
+            return fast_result
+
+        logger.info("[Pipeline] Fast-path returned 0 items. Launching lightweight Playwright pipeline...")
+
         if not self._context:
             await self.start()
 
@@ -116,11 +128,42 @@ class FacebookScraper:
         page: Page = await self._context.new_page()
         page.set_default_timeout(self.config.page_timeout_ms)
 
+        # 2. Intercept and abort stylesheets, fonts, media, and analytics to minimize memory and time
+        async def route_interceptor(route):
+            try:
+                req = route.request
+                res_type = req.resource_type
+                # Abort stylesheets, fonts, audio/video media
+                if res_type in ("stylesheet", "font", "media"):
+                    await route.abort()
+                    return
+
+                # Abort analytics, telemetry, and tracking endpoints
+                req_url = req.url.lower()
+                if any(
+                    tracker in req_url
+                    for tracker in (
+                        "google-analytics.com",
+                        "facebook.com/tr/",
+                        "connect.facebook.net/signals",
+                        "analytics",
+                        "telemetry",
+                    )
+                ):
+                    await route.abort()
+                    return
+
+                await route.continue_()
+            except Exception:
+                pass
+
+        await page.route("**/*", route_interceptor)
+
         discovered_items: List[MediaItem] = []
         seen_urls: Set[str] = set()
         intercepted_network_urls: Set[str] = set()
 
-        # 1. Attach live network response interceptor
+        # 3. Attach live network response interceptor for CDN assets
         def handle_response(response):
             try:
                 url_str = response.url
@@ -134,7 +177,7 @@ class FacebookScraper:
         page.on("response", handle_response)
 
         try:
-            # 2. Navigate to target post
+            # 4. Navigate to target post
             try:
                 await page.goto(
                     canonical_url,

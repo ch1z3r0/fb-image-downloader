@@ -7,20 +7,22 @@
     <meta name="description" content="Step-by-step visual tutorial on copying clean Facebook post, album, and photo URLs for ultra HD image extraction.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body class="dark-theme">
-    <!-- Background glow spheres -->
+    <!-- Background Canvas Texture & Ambient Glow System -->
+    <div class="canvas-grid-overlay"></div>
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
     <div class="glow-orb orb-3"></div>
+    <div class="ambient-vignette"></div>
 
     <div class="app-container">
         <!-- Navigation Bar -->
-        <header class="navbar glass-panel">
+        <header class="navbar glass-panel floating-nav">
             <div class="nav-brand">
                 <a href="/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px;">
                     <div class="logo-icon">

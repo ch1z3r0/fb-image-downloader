@@ -6,20 +6,22 @@
     <title>Facebook Post Image Downloader | Ultra HD Extraction</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body class="dark-theme">
-    <!-- Background glow spheres -->
+    <!-- Background Canvas Texture & Ambient Glow System -->
+    <div class="canvas-grid-overlay"></div>
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
     <div class="glow-orb orb-3"></div>
+    <div class="ambient-vignette"></div>
 
     <div class="app-container">
         <!-- Navigation Bar -->
-        <header class="navbar glass-panel">
+        <header class="navbar glass-panel floating-nav">
             <div class="nav-brand">
                 <div class="logo-icon">
                     <i data-lucide="camera"></i>
@@ -146,7 +148,14 @@
                         <span class="pulse-indicator"></span>
                         <h4 id="progressStatusText">Extracting media from Facebook post...</h4>
                     </div>
-                    <span id="progressTimer" class="time-badge">0s elapsed</span>
+                    <div class="progress-header-right">
+                        <span id="progressTimer" class="time-badge">0s elapsed</span>
+                        <button type="button" id="btnToggleLogs" class="btn-tag" title="Toggle real-time log drawer">
+                            <i data-lucide="terminal" class="icon-sm"></i>
+                            <span>Logs</span>
+                            <i data-lucide="chevron-down" id="chevronLogs" class="icon-sm"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="steps-container">
                     <div class="step-node active" id="step1">
@@ -167,6 +176,22 @@
                     <div class="step-node" id="step4">
                         <div class="step-circle"><i data-lucide="check-circle-2"></i></div>
                         <span class="step-label">High-Res CDN</span>
+                    </div>
+                </div>
+
+                <!-- Collapsible Session Log HUD Drawer -->
+                <div id="sessionLogDrawer" class="session-log-drawer collapsed">
+                    <div class="session-log-header">
+                        <div class="log-status-wrap">
+                            <span class="log-dot"></span>
+                            <span class="log-title font-mono text-xs">Engine Session HUD</span>
+                        </div>
+                        <button type="button" id="btnCopyLogs" class="btn-dock-text font-mono text-xs" title="Copy all logs">
+                            <i data-lucide="copy" class="icon-sm"></i> Copy Logs
+                        </button>
+                    </div>
+                    <div id="sessionLogConsole" class="session-log-console font-mono">
+                        <div class="log-line text-muted">[System] Ready. Waiting for extraction trigger...</div>
                     </div>
                 </div>
             </section>
@@ -234,12 +259,12 @@
 
                 <div class="device-save-hint">
                     <i data-lucide="smartphone"></i>
-                    <span><strong>Connecting from a phone or another PC?</strong> Click <strong>Download to This Device (ZIP)</strong> or the download button on any photo card to save images directly to your own device.</span>
+                    <span><strong>Connecting from a phone or another PC?</strong> Click <strong>Download to This Device (ZIP)</strong> or the download button on any photo card to save images directly to your own device. Double-click any photo to inspect full resolution.</span>
                 </div>
 
                 <!-- Photos Grid -->
                 <div id="photosGrid" class="photos-grid">
-                    <!-- Dynamic Media Item Cards Injected via JS -->
+                    <!-- Dynamic Media Item Cards or Skeletons Injected via JS -->
                 </div>
             </section>
         </main>
@@ -250,6 +275,26 @@
         </footer>
     </div>
 
+    <!-- Floating Bottom Selection Action Dock -->
+    <aside id="floatingActionDock" class="floating-bottom-dock hidden">
+        <div class="dock-inner glass-panel">
+            <div class="dock-selection-info">
+                <span class="dock-badge font-mono"><span id="dockSelectedCount">0</span> selected</span>
+                <span class="dock-hint">Click cards to toggle selection</span>
+            </div>
+            <div class="dock-actions">
+                <button type="button" id="btnDockSelectAll" class="btn-dock-text">Select All</button>
+                <button type="button" id="btnDockClearAll" class="btn-dock-text text-muted">Clear All</button>
+                <button type="button" id="btnDockDownloadZip" class="btn-action btn-zip">
+                    <i data-lucide="archive"></i> Download ZIP (<span id="dockCountZip">0</span>)
+                </button>
+                <button type="button" id="btnDockSaveLocal" class="btn-action glass-btn">
+                    <i data-lucide="hard-drive"></i> Save to Host Server
+                </button>
+            </div>
+        </div>
+    </aside>
+
     <!-- Fullscreen Lightbox Modal -->
     <div id="lightboxModal" class="lightbox-modal hidden">
         <div class="lightbox-backdrop"></div>
@@ -258,6 +303,7 @@
                 <div class="lightbox-info">
                     <span id="lightboxIndex" class="lightbox-badge">Photo 1 of 5</span>
                     <span id="lightboxDimensions" class="lightbox-badge-dim">2048 × 1536 px</span>
+                    <span id="lightboxMime" class="lightbox-badge-dim">JPG</span>
                 </div>
                 <div class="lightbox-controls">
                     <button id="btnLightboxDownload" class="btn-icon-round" title="Download Photo">
