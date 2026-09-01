@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  fb-downloader:
+    build: .
+    container_name: fb-image-downloader
+    ports:
+      - "8000:8000"
+    volumes:
+      # Downloaded photos will appear here on your host machine
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1

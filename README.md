@@ -1,122 +1,238 @@
-# Facebook Post Image Downloader Pro
+# 📸 Facebook Post Image Downloader Pro
 
-A production-grade Python tool and modern Web UI for scraping and downloading high-resolution photos from Facebook posts, albums, multi-photo grids, and share links using Playwright browser automation and concurrent streaming downloads.
+> Download **all high-resolution photos** from any Facebook post or album — with a beautiful Web UI, local network sharing, and direct folder selection.
 
----
-
-## 🌟 Key Features
-
-- **🎨 Modern Glassmorphic Web UI**: Complete single-page dashboard with real-time scraping feedback, interactive photo gallery, multi-select toolbar, fullscreen high-res lightbox, and one-click ZIP export.
-- **⚡ Multi-Format URL Resolution**: Supports canonical posts (`facebook.com/.../posts/...`), share links (`fb.com/share/p/...`), photo permalinks (`photo/?fbid=...`), and mobile links.
-- **🛡️ Anti-Bot & Modal Bypass**: Automatically dismisses cookie consent dialogs and login modal barriers without requiring account credentials.
-- **🖼️ Multi-Photo Grid Expansion**: Clicks into photo thumbnails, opens the Facebook Theater viewer carousel, and walks through multi-photo albums with keyboard navigation (`ArrowRight`).
-- **🔍 High-Res CDN Filtering**: Strips out avatars, UI sprites (`rsrc.php`), emojis (`emoji.php`), and tracking beacons. Parses `srcset` descriptors and embedded GraphQL `<script type="application/json">` tags to capture full-size (2048px/1080px) images.
-- **🚀 Concurrent Chunked Downloader**: Streams images asynchronously using `httpx.AsyncClient` with connection pooling, retries, and chunked disk writes.
-- **📦 Dynamic Content-Type Formatting**: Automatically detects response `Content-Type` headers (`image/jpeg`, `image/png`, `image/webp`) and binary magic bytes to name files cleanly as `photo_001.jpg`, `photo_002.png`, etc.
-- **📊 Rich Terminal UI**: Live multi-task progress bars with download speeds, remaining times, and final summary tables.
-- **✅ Pre-Flight Environment Validation**: Automatically validates Python version, directory write permissions, and Playwright Chromium installation.
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)
+![Playwright](https://img.shields.io/badge/Playwright-Chromium-orange?logo=playwright)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Tests](https://img.shields.io/badge/Tests-36%20passing-brightgreen)
 
 ---
 
-## 📦 Installation
+## ✨ Features
+
+- 🖼️ **Download 200+ photos** from a single post with full scroll-based extraction
+- 🌐 **Beautiful Web UI** — dark glassmorphism design, gallery view, lightbox
+- 📱 **LAN Sharing** — open from your phone, tablet, or another PC on the same Wi-Fi
+- 📂 **Folder Selection** — save directly into any folder on your computer
+- 🗜️ **Named ZIP Downloads** — type a folder name, get an organized ZIP
+- 🔒 **HTTPS mode** — enables native folder picker for other devices on the network
+- 🌍 **All image formats** — JPEG, PNG, WebP, AVIF, HEIC, GIF, BMP, TIFF, SVG
+- 🔍 **Private post detection** — friendly error when a post is restricted
+- 📖 **Tutorial page** — built-in guide on how to get the right Facebook link
+
+---
+
+## 🚀 Quick Start
+
+Choose the method that works best for you:
+
+### Option 1 — One-Command Setup (Recommended)
+
+**Mac / Linux:**
+```bash
+git clone https://github.com/ch1z3r0/fb-image-downloader.git
+cd fb-image-downloader
+bash setup.sh
+```
+
+Then launch:
+```bash
+source .venv/bin/activate
+python main.py --ui
+```
+
+**Windows:**
+```
+git clone https://github.com/ch1z3r0/fb-image-downloader.git
+cd fb-image-downloader
+setup.bat
+```
+
+Then launch:
+```
+.venv\Scripts\activate && python main.py --ui
+```
+
+Open **http://localhost:8000** in your browser. ✅
+
+---
+
+### Option 2 — Docker (No Python needed)
+
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-# 1. Clone repository and set up virtual environment
+git clone https://github.com/ch1z3r0/fb-image-downloader.git
+cd fb-image-downloader
+docker-compose up
+```
+
+Open **http://localhost:8000** in your browser. Downloaded photos appear in the `./downloads/` folder.
+
+---
+
+### Option 3 — Manual Setup
+
+```bash
+git clone https://github.com/ch1z3r0/fb-image-downloader.git
+cd fb-image-downloader
+
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
-# 2. Install dependencies
-pip install -r requirements.txt
+pip install -e .
+pip install fastapi uvicorn httpx anyio
 
-# 3. Install Playwright Chromium browser
-playwright install chromium
-# or run:
-python main.py --install-browsers
+python -m playwright install chromium
+
+python main.py --ui
 ```
 
 ---
 
-## 🌐 Launching the Web UI (Local & Network Access)
+## 📖 How to Use
 
-Launch the web server and open the interactive dashboard in your browser:
+### 1. Get the Right Facebook Link
+
+Click the **📖 How to Get Link** button in the app for a visual guide, or follow these steps:
+
+| Platform | Steps |
+|----------|-------|
+| **Desktop** | Open the post → Click the timestamp (e.g. "2 hours ago") → Copy the URL from your browser |
+| **Mobile** | Open the post → Tap ⋯ (three dots) → **Copy link** |
+
+> ✅ Use the link to the **post** (not a single photo). The app will extract all photos.
+
+### 2. Paste & Scan
+
+Paste the Facebook post URL into the app and click **Scan Post**.
+
+### 3. Select & Download
+
+- Select individual photos or click **Select All**
+- Choose how to save:
+  - **📂 Save to Selected Folder** — picks a folder on your computer (Chrome/Edge + HTTPS)
+  - **📦 Download ZIP** — type a folder name, get an organized ZIP file
+  - **🖼️ Download Files** — individual loose files to your Downloads folder
+  - **💾 Save to Host Server** — saves to the server machine's disk
+
+---
+
+## 🌐 Local Network (LAN) Sharing
+
+Share access with anyone on the same Wi-Fi — no installation needed on their device.
 
 ```bash
-# Launch Web UI on Local Network (accessible by phones & other PCs on same Wi-Fi)
+python main.py --ui
+```
+
+The terminal shows two URLs:
+```
+🏠 Local Host:    http://localhost:8000
+📱 Local Network: http://192.168.x.x:8000  ← share this with others
+```
+
+Other devices just open that URL in their browser and can download photos straight to their own device.
+
+### Enable Folder Selection for Other Devices (HTTPS)
+
+Browsers only allow native folder picking over HTTPS. Start with `--ssl` to enable it:
+
+```bash
+python main.py --ui --ssl
+```
+
+Other devices open `https://192.168.x.x:8000`, click **Accept Risk** once, then **"Save to Selected Folder"** works natively.
+
+---
+
+## ⚙️ CLI Reference
+
+```
+Usage: python main.py [OPTIONS] [URL]
+
+Options:
+  --ui                Launch the Web UI (default when no URL given)
+  --host TEXT         Host to bind to [default: 0.0.0.0]
+  --port INTEGER      Port to run on [default: 8000]
+  --ssl               Enable HTTPS with self-signed cert (unlocks LAN folder picker)
+  --output TEXT       Output directory for CLI downloads
+  --headless          Run browser headless (default: True)
+  --concurrency INT   Parallel download workers [default: 5]
+  --check             Check environment and exit
+  --install-browsers  Install Playwright Chromium
+  --verbose           Enable debug logging
+```
+
+**Examples:**
+```bash
+# Launch Web UI
 python main.py --ui
 
-# Or specify a custom port / host
-python main.py --ui --port 8080 --host 0.0.0.0
-```
+# Launch on HTTPS for LAN folder picking
+python main.py --ui --ssl
 
-When started, the terminal will display both access points:
-- **🏠 Local Host**: `http://localhost:8000`
-- **📱 Local Network (LAN)**: `http://192.168.x.x:8000` *(Scan or open directly on your mobile device!)*
+# Download from CLI directly
+python main.py "https://www.facebook.com/share/p/..." --output ~/Desktop/Photos
 
----
-
-## 💻 CLI Usage
-
-```bash
-# Basic download
-python main.py "https://www.facebook.com/share/p/123456789/"
-
-# Custom output directory and visible browser
-python main.py "https://www.facebook.com/zuck/posts/1011442129999" --output ./my_photos --no-headless
-
-# High concurrency with verbose debug logs
-python main.py "https://www.facebook.com/photo/?fbid=1122334455" --concurrency 8 --verbose
-
-# Perform environment health check
-python main.py --check-only
-```
-
-### Options Reference
-
-| Flag | Shorthand | Type | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `url` | - | `str` | Required / Optional | Facebook post URL or share link |
-| `--ui` | - | `flag` | `False` | Launch the interactive Web UI dashboard |
-| `--port` | `-p` | `int` | `8000` | Port for Web UI server |
-| `--output` | `-o` | `str` | `./downloads/<post_id>/` | Destination directory |
-| `--headless / --no-headless` | - | `bool` | `True` | Run Chromium in headless mode |
-| `--concurrency` | `-c` | `int` | `5` | Maximum concurrent downloads (1-20) |
-| `--verbose` | `-v` | `bool` | `False` | Enable debug logs |
-| `--check-env / --no-check-env` | - | `bool` | `True` | Run pre-flight environment checks |
-| `--install-browsers` | - | `flag` | - | Auto-install Playwright browser binaries |
-| `--check-only` | - | `flag` | - | Run health checks without scraping |
-
----
-
-## 🏗️ Architecture & Modules
-
-```
-downloader/
-├── fb_downloader/
-│   ├── __init__.py      # Package definition
-│   ├── config.py        # Selectors, timeouts, CDN filter regexes
-│   ├── models.py        # Pydantic data models (MediaItem, ScrapeResult, DownloadResult)
-│   ├── url_utils.py     # URL validation, canonicalization, post ID extraction
-│   ├── cdn_utils.py     # Avatar/sprite filtering, srcset parser, MIME resolution
-│   ├── scraper.py       # Playwright browser manager, modal bypass, grid & JSON extractor
-│   ├── downloader.py    # Async streaming downloader with Rich progress UI
-│   ├── validator.py     # Pre-flight environment & Playwright binary validator
-│   ├── web_server.py    # FastAPI web backend (REST API & ZIP streaming)
-│   └── cli.py           # Typer CLI definition with Rich styling & Web UI launcher
-├── web/                 # Modern Frontend Single Page App
-│   ├── index.html       # Semantic HTML5 layout
-│   ├── css/style.css    # Dark glassmorphic design system
-│   └── js/app.js        # Reactive gallery, lightbox, and ZIP exporter
-├── tests/               # Pytest automated test suite (32 unit & API tests)
-├── main.py              # Application entry point
-├── requirements.txt     # Dependency specifications
-└── pyproject.toml       # Build configuration and pytest settings
+# Custom port
+python main.py --ui --port 9090
 ```
 
 ---
 
-## 🧪 Running Tests
+## 📁 Project Structure
 
-```bash
-# Run all unit, API, and e2e integration tests
-pytest -v
 ```
+fb-image-downloader/
+├── fb_downloader/          # Core Python package
+│   ├── scraper.py          # Playwright-based Facebook scraper
+│   ├── downloader.py       # Concurrent image downloader
+│   ├── web_server.py       # FastAPI server + API endpoints
+│   ├── cdn_utils.py        # CDN URL parsing & image format detection
+│   ├── cli.py              # Typer CLI interface
+│   └── models.py           # Pydantic data models
+├── web/                    # Frontend
+│   ├── index.html          # Main Web UI
+│   ├── tutorial.html       # How-to guide
+│   ├── js/app.js           # UI logic
+│   └── css/style.css       # Glassmorphism dark theme
+├── tests/                  # 36 unit tests
+├── setup.sh                # Mac/Linux setup
+├── setup.bat               # Windows setup
+├── Dockerfile              # Docker image
+└── docker-compose.yml      # Docker Compose
+```
+
+---
+
+## 🔧 Requirements
+
+- **Python 3.9+**
+- **Chrome/Chromium** (installed automatically by Playwright)
+- **Internet connection** (to access Facebook)
+- Facebook posts must be **publicly visible** (or logged-in — not currently supported)
+
+---
+
+## ❓ Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Only getting 5–10 photos from a large album | Make sure you're using the **post link**, not a single photo link |
+| "Post is private or restricted" message | The post is not publicly visible — it requires Facebook login |
+| "Save to Selected Folder" button doesn't open picker | Start with `--ssl` flag, or use "Ask where to save" in browser settings |
+| Playwright browser not found | Run `python -m playwright install chromium` |
+| Port 8000 already in use | Use `--port 9090` (or any free port) |
+
+---
+
+## 📜 License
+
+MIT — free to use, modify, and distribute.
+
+---
+
+## ⭐ Star this repo if it helped you!
