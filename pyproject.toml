@@ -19,6 +19,10 @@ dependencies = [
 [project.scripts]
 fb-downloader = "fb_downloader.cli:app"
 
+# Explicitly include only the Python package — exclude web/ (frontend assets)
+[tool.setuptools.packages.find]
+include = ["fb_downloader*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
