@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Get the Right Facebook Link | FB Downloader Tutorial</title>
+    <meta name="description" content="Step-by-step visual tutorial on copying clean Facebook post, album, and photo URLs for ultra HD image extraction.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dark-theme">
+    <!-- Background glow spheres -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <div class="app-container">
+        <!-- Navigation Bar -->
+        <header class="navbar glass-panel">
+            <div class="nav-brand">
+                <a href="/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px;">
+                    <div class="logo-icon">
+                        <i data-lucide="camera"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>FB Downloader <span class="badge-pro">PRO</span></h1>
+                        <span class="brand-sub">Tutorial & Link Guide</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="nav-actions">
+                <a href="/" class="btn-primary-sm">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Back to Downloader</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Tutorial Section -->
+        <main class="main-content">
+            <!-- Hero Title -->
+            <section class="tutorial-hero">
+                <div class="badge-pill">
+                    <i data-lucide="sparkles" class="icon-sm"></i>
+                    <span>Visual Guide & Live URL Inspector</span>
+                </div>
+                <h1 class="tutorial-title">How to Get the <span class="gradient-text">Right Facebook Link</span></h1>
+                <p class="tutorial-subtitle">
+                    Facebook uses different URL formats for feed previews, full albums, and mobile shares. Follow this quick guide to copy the exact URL that captures 100% of photos in original uncompressed quality.
+                </p>
+            </section>
+
+            <!-- Interactive Live Link Tester -->
+            <section class="tutorial-card glass-panel interactive-tester-card">
+                <div class="card-header-clean">
+                    <div class="card-icon-badge">
+                        <i data-lucide="scan-line"></i>
+                    </div>
+                    <div>
+                        <h3>Interactive URL Inspector</h3>
+                        <p>Paste any Facebook link below to test if it's formatted correctly before downloading.</p>
+                    </div>
+                </div>
+
+                <div class="tester-input-row">
+                    <div class="input-wrapper">
+                        <div class="input-icon">
+                            <i data-lucide="link"></i>
+                        </div>
+                        <input 
+                            type="url" 
+                            id="testerUrlInput" 
+                            placeholder="Paste your Facebook URL here to analyze (e.g. https://www.facebook.com/share/p/...)"
+                            autocomplete="off"
+                        />
+                        <button type="button" id="btnTesterAnalyze" class="btn-primary-gradient btn-tester">
+                            <span>Analyze Link</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Analysis Result Box (Dynamic) -->
+                <div id="testerResultBox" class="tester-result-box hidden">
+                    <div class="result-header">
+                        <div id="resultStatusIcon" class="result-status-icon valid">
+                            <i data-lucide="check-circle-2"></i>
+                        </div>
+                        <div>
+                            <h4 id="resultTitle">Valid Facebook Link</h4>
+                            <p id="resultDescription">This URL contains a recognized post identifier and is ready for scraping.</p>
+                        </div>
+                        <div class="result-action-btn">
+                            <button type="button" id="btnUseInDownloader" class="btn-download-sm">
+                                <i data-lucide="zap"></i> Extract Now
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Link Type:</span>
+                            <span id="detailLinkType" class="detail-value highlight">Post Permalink</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Extracted ID:</span>
+                            <span id="detailExtractedId" class="detail-value code-font">pfbid0...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Album / Multi-Photo:</span>
+                            <span id="detailAlbumSupport" class="detail-value text-emerald">Supported</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Device Tabs Guide -->
+            <section class="tutorial-card glass-panel">
+                <div class="tab-header-row">
+                    <h2>Step-by-Step Instructions</h2>
+                    <div class="device-tab-pills" role="tablist">
+                        <button type="button" class="tab-pill active" data-tab="tab-desktop">
+                            <i data-lucide="laptop"></i> 💻 Desktop Browser
+                        </button>
+                        <button type="button" class="tab-pill" data-tab="tab-mobile">
+                            <i data-lucide="smartphone"></i> 📱 Mobile App (iOS / Android)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 1: Desktop Browser -->
+                <div id="tab-desktop" class="tab-content active">
+                    <div class="steps-grid">
+                        <!-- Step 1 -->
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <div class="step-icon-wrap">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <h3>Click the Post Timestamp</h3>
+                            <p>Hover over the post's creation time (e.g. <em>"2 hrs ago"</em>, <em>"September 1 at 10:30 AM"</em>, or <em>"Yesterday"</em>) and <strong>click it</strong> or right-click &rarr; <em>"Copy link address"</em>.</p>
+                            <div class="step-tip">
+                                <i data-lucide="info"></i>
+                                <span>Clicking the timestamp opens the direct post permalink page.</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <div class="step-icon-wrap">
+                                <i data-lucide="copy"></i>
+                            </div>
+                            <h3>Copy Address Bar URL</h3>
+                            <p>Copy the full link from your browser's URL address bar. It will start with <code>facebook.com/.../posts/...</code> or <code>facebook.com/permalink.php?...</code>.</p>
+                            <div class="code-preview">
+                                <code>https://www.facebook.com/page/posts/pfbid0...</code>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Albums -->
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <div class="step-icon-wrap">
+                                <i data-lucide="images"></i>
+                            </div>
+                            <h3>For 200+ Photo Albums</h3>
+                            <p>If the post is a large album with <code>+33</code> or <code>+205</code> photos, click directly on the <strong>first thumbnail</strong> or the <strong>Album Title</strong> above the photos, then copy that URL.</p>
+                            <div class="code-preview">
+                                <code>https://www.facebook.com/photo/?fbid=...&set=pcb...</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Mobile App -->
+                <div id="tab-mobile" class="tab-content">
+                    <div class="steps-grid">
+                        <!-- Step 1 -->
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <div class="step-icon-wrap">
+                                <i data-lucide="share-2"></i>
+                            </div>
+                            <h3>Tap the "Share" Button</h3>
+                            <p>At the bottom right of the Facebook post or album, tap the <strong>Share</strong> button (arrow icon).</p>
+                            <div class="step-tip">
+                                <i data-lucide="info"></i>
+                                <span>Do not share to your own feed, just open the share sheet.</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <div class="step-icon-wrap">
+                                <i data-lucide="link-2"></i>
+                            </div>
+                            <h3>Tap "Copy Link"</h3>
+                            <p>From the popup menu, tap <strong>"Copy Link"</strong> (or swipe down to <em>"More options..."</em> &rarr; <em>"Copy"</em>). A link like <code>fb.com/share/p/...</code> is copied.</p>
+                            <div class="code-preview">
+                                <code>https://www.facebook.com/share/p/1922bgrBZ3/</code>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <div class="step-icon-wrap">
+                                <i data-lucide="zap"></i>
+                            </div>
+                            <h3>Paste & Extract</h3>
+                            <p>Open FB Downloader PRO on your device, click <strong>Paste</strong> into the search bar, and click <strong>Extract Photos</strong>!</p>
+                            <div class="step-tip success">
+                                <i data-lucide="check"></i>
+                                <span>Our engine automatically resolves mobile share links to full high-res albums!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Supported Link Types Matrix -->
+            <section class="tutorial-card glass-panel">
+                <div class="card-header-clean">
+                    <div class="card-icon-badge">
+                        <i data-lucide="check-check"></i>
+                    </div>
+                    <div>
+                        <h2>Supported Facebook Link Formats</h2>
+                        <p>All of these formats are 100% supported by FB Downloader PRO:</p>
+                    </div>
+                </div>
+
+                <div class="formats-table-wrapper">
+                    <table class="formats-table">
+                        <thead>
+                            <tr>
+                                <th>Link Type</th>
+                                <th>URL Pattern</th>
+                                <th>Photo Extraction Mode</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="format-name">
+                                        <i data-lucide="share-2" class="text-cyan"></i>
+                                        <strong>Mobile Share Link</strong>
+                                    </div>
+                                    <span class="format-desc">Copied via Facebook mobile app Share button</span>
+                                </td>
+                                <td><code class="code-pill">https://www.facebook.com/share/p/1922bgrBZ3/</code></td>
+                                <td><span class="badge-status-tag tag-emerald">Full Album (200+ Photos)</span></td>
+                                <td>
+                                    <button type="button" class="btn-copy-sample" data-url="https://www.facebook.com/share/p/1922bgrBZ3/">
+                                        <i data-lucide="clipboard"></i> Copy Sample
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="format-name">
+                                        <i data-lucide="file-text" class="text-indigo"></i>
+                                        <strong>Standard Desktop Post</strong>
+                                    </div>
+                                    <span class="format-desc">Post permalink with pfbid token</span>
+                                </td>
+                                <td><code class="code-pill">https://www.facebook.com/moeys.gov.kh/posts/pfbid0poN3...</code></td>
+                                <td><span class="badge-status-tag tag-emerald">Multi-Photo Grid (+33 Photos)</span></td>
+                                <td>
+                                    <button type="button" class="btn-copy-sample" data-url="https://www.facebook.com/moeys.gov.kh/posts/pfbid0poN3MTv62G1ARy64oFjFnEm92gy4fS5ntd4At77SNNXAbuECCznokckDRb4azoT5l">
+                                        <i data-lucide="clipboard"></i> Copy Sample
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="format-name">
+                                        <i data-lucide="folder-image" class="text-violet"></i>
+                                        <strong>Direct Album Set</strong>
+                                    </div>
+                                    <span class="format-desc">Full Facebook media collection / album URL</span>
+                                </td>
+                                <td><code class="code-pill">https://www.facebook.com/media/set/?set=a.137201929...</code></td>
+                                <td><span class="badge-status-tag tag-emerald">Deep Carousel Stream</span></td>
+                                <td>
+                                    <button type="button" class="btn-copy-sample" data-url="https://www.facebook.com/media/set/?set=a.1372019291618157">
+                                        <i data-lucide="clipboard"></i> Copy Sample
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="format-name">
+                                        <i data-lucide="image" class="text-rose"></i>
+                                        <strong>Direct Photo Theater</strong>
+                                    </div>
+                                    <span class="format-desc">Single photo view in theater mode</span>
+                                </td>
+                                <td><code class="code-pill">https://www.facebook.com/photo/?fbid=1372031964950223...</code></td>
+                                <td><span class="badge-status-tag tag-indigo">Single Photo / Carousel</span></td>
+                                <td>
+                                    <button type="button" class="btn-copy-sample" data-url="https://www.facebook.com/photo/?fbid=1372031964950223&set=pcb.1372041061615980">
+                                        <i data-lucide="clipboard"></i> Copy Sample
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Common Mistakes to Avoid -->
+            <section class="tutorial-card glass-panel">
+                <div class="card-header-clean">
+                    <div class="card-icon-badge icon-danger">
+                        <i data-lucide="alert-triangle"></i>
+                    </div>
+                    <div>
+                        <h2>Common Mistakes to Avoid</h2>
+                        <p>Make sure to avoid these invalid link types:</p>
+                    </div>
+                </div>
+
+                <div class="mistakes-grid">
+                    <div class="mistake-card">
+                        <div class="mistake-badge invalid"><i data-lucide="x"></i> Avoid</div>
+                        <h4>Profile or Page Homepage URL</h4>
+                        <div class="bad-code"><code>https://www.facebook.com/username</code></div>
+                        <p>This only points to the user's overall timeline, not a specific post. Click the exact post timestamp to get the post URL.</p>
+                    </div>
+
+                    <div class="mistake-card">
+                        <div class="mistake-badge invalid"><i data-lucide="x"></i> Avoid</div>
+                        <h4>Notification or Feed URL</h4>
+                        <div class="bad-code"><code>https://www.facebook.com/notifications/...</code></div>
+                        <p>Notification links contain internal tracking redirect IDs. Always navigate to the post itself before copying.</p>
+                    </div>
+
+                    <div class="mistake-card">
+                        <div class="mistake-badge invalid"><i data-lucide="x"></i> Avoid</div>
+                        <h4>Private Group Links without Access</h4>
+                        <div class="bad-code"><code>https://www.facebook.com/groups/private_id/...</code></div>
+                        <p>If a group is set to Secret or Closed, Facebook requires an active login session to render the attached photos.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Frequently Asked Questions -->
+            <section class="tutorial-card glass-panel">
+                <div class="card-header-clean">
+                    <div class="card-icon-badge">
+                        <i data-lucide="help-circle"></i>
+                    </div>
+                    <div>
+                        <h2>Frequently Asked Questions</h2>
+                        <p>Everything you need to know about extracting high-resolution photos.</p>
+                    </div>
+                </div>
+
+                <div class="faq-list">
+                    <details class="faq-item">
+                        <summary class="faq-question">
+                            <span>Why did a post with 30+ photos only show 4 photos on my feed?</span>
+                            <i data-lucide="chevron-down" class="faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">
+                            <p>Facebook uses a 4-photo collage preview in newsfeeds and overlays a <code>+26</code> or <code>+205</code> badge on the last photo. FB Downloader PRO automatically opens the underlying album collection, bypasses the collage truncation, and downloads all hidden photos across the entire album.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">
+                            <span>Are downloaded photos compressed or uncompressed?</span>
+                            <i data-lucide="chevron-down" class="faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">
+                            <p>FB Downloader PRO parses the HTML <code>srcset</code> attributes, Comet GraphQL image nodes, and raw network payloads to extract the <strong>highest available resolution (e.g. 2048x2048 or original uncompressed dimensions)</strong>, filtering out all thumbnails and avatars.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">
+                            <span>Can I download full albums with 200+ photos as a ZIP file?</span>
+                            <i data-lucide="chevron-down" class="faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">
+                            <p>Yes! Once the post is extracted, simply click <strong>"Download All (ZIP)"</strong> to stream the entire album into a single uncompressed ZIP archive with 10x concurrent downloads and automatic retry fallbacks.</p>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <!-- Call to Action Banner -->
+            <section class="cta-banner glass-panel">
+                <div class="cta-content">
+                    <h2>Ready to Extract Your Photos?</h2>
+                    <p>Paste your Facebook link and download full-resolution images in seconds.</p>
+                </div>
+                <div class="cta-action">
+                    <a href="/" class="btn-primary-gradient btn-large">
+                        <i data-lucide="zap"></i> Open Downloader Dashboard
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Facebook Post Image Downloader PRO &bull; High-Performance Automation Engine</p>
+        </footer>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/static/js/tutorial.js"></script>
+</body>
+</html>

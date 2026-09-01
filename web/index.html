@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Post Image Downloader | Ultra HD Extraction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dark-theme">
+    <!-- Background glow spheres -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <div class="app-container">
+        <!-- Navigation Bar -->
+        <header class="navbar glass-panel">
+            <div class="nav-brand">
+                <div class="logo-icon">
+                    <i data-lucide="camera"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>FB Downloader <span class="badge-pro">PRO</span></h1>
+                    <span class="brand-sub">Playwright Automation Engine</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <a href="/tutorial" class="btn-nav-tutorial" title="How to get the right Facebook links">
+                    <i data-lucide="book-open"></i>
+                    <span>Link Guide</span>
+                </a>
+                <div id="healthStatusPill" class="status-pill checking" title="Engine Status">
+                    <span class="status-dot"></span>
+                    <span id="healthStatusText">Checking Engine...</span>
+                </div>
+                <button id="btnHealthModal" class="btn-icon glass-btn" title="System Info">
+                    <i data-lucide="info"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Hero Search Card -->
+            <section class="hero-section">
+                <div class="hero-header">
+                    <h2 class="hero-title">Extract & Download Facebook Photos in <span class="gradient-text">Highest Resolution</span></h2>
+                    <p class="hero-subtitle">Bypass anti-bot modals, traverse multi-photo grids & carousels, and extract original uncompressed CDN assets.</p>
+                </div>
+
+                <div class="control-card glass-panel">
+                    <form id="scrapeForm" class="scrape-form">
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <i data-lucide="link"></i>
+                            </div>
+                            <input 
+                                type="url" 
+                                id="fbUrlInput" 
+                                placeholder="Paste Facebook post URL or share link (e.g. https://www.facebook.com/... or https://fb.com/share/p/...)"
+                                required 
+                                autocomplete="off"
+                            />
+                            <div class="input-actions">
+                                <button type="button" id="btnPaste" class="btn-tag" title="Paste from clipboard">
+                                    <i data-lucide="clipboard"></i> Paste
+                                </button>
+                                <button type="button" id="btnSample" class="btn-tag" title="Load sample post">
+                                    <i data-lucide="sparkles"></i> Sample
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="input-helper-row">
+                            <a href="/tutorial" class="link-helper">
+                                <i data-lucide="help-circle"></i>
+                                <span>How to copy the right link? (Desktop timestamp, Mobile share, +200 Album guide) &rarr;</span>
+                            </a>
+                        </div>
+
+                        <!-- Settings Accordion -->
+                        <div class="settings-toggle-bar">
+                            <button type="button" id="btnToggleSettings" class="btn-text-toggle">
+                                <i data-lucide="sliders" class="icon-sm"></i>
+                                <span>Extraction Settings</span>
+                                <i data-lucide="chevron-down" class="icon-sm toggle-chevron"></i>
+                            </button>
+                        </div>
+
+                        <div id="settingsDrawer" class="settings-drawer collapsed">
+                            <div class="settings-grid">
+                                <div class="setting-item">
+                                    <label for="headlessToggle" class="setting-label">
+                                        <span>Headless Browser</span>
+                                        <small>Run Chromium invisibly</small>
+                                    </label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="headlessToggle" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label for="concurrencySlider" class="setting-label">
+                                        <span>Download Concurrency</span>
+                                        <small id="concurrencyLabel">5 concurrent streams</small>
+                                    </label>
+                                    <input type="range" id="concurrencySlider" min="1" max="10" value="5" class="range-slider">
+                                </div>
+
+                                <div class="setting-item full-width">
+                                    <label for="customOutputDir" class="setting-label">
+                                        <span>Custom Output Folder (optional)</span>
+                                        <small>Leave blank for default ./downloads/&lt;post_id&gt;/</small>
+                                    </label>
+                                    <input type="text" id="customOutputDir" placeholder="./downloads" class="setting-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-submit-row">
+                            <button type="submit" id="btnSubmit" class="btn-primary-gradient">
+                                <span class="btn-text">
+                                    <i data-lucide="zap"></i> Extract Photos
+                                </span>
+                                <div class="btn-loader hidden">
+                                    <span class="spinner"></span>
+                                    <span>Automating Playwright...</span>
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Extraction Live Stepper Progress (Hidden by default) -->
+            <section id="extractionProgressSection" class="progress-section glass-panel hidden">
+                <div class="progress-header">
+                    <div class="progress-title">
+                        <span class="pulse-indicator"></span>
+                        <h4 id="progressStatusText">Extracting media from Facebook post...</h4>
+                    </div>
+                    <span id="progressTimer" class="time-badge">0s elapsed</span>
+                </div>
+                <div class="steps-container">
+                    <div class="step-node active" id="step1">
+                        <div class="step-circle"><i data-lucide="shield-check"></i></div>
+                        <span class="step-label">Bypass Modals</span>
+                    </div>
+                    <div class="step-line" id="line1"></div>
+                    <div class="step-node" id="step2">
+                        <div class="step-circle"><i data-lucide="database"></i></div>
+                        <span class="step-label">GraphQL State</span>
+                    </div>
+                    <div class="step-line" id="line2"></div>
+                    <div class="step-node" id="step3">
+                        <div class="step-circle"><i data-lucide="gallery-thumbnails"></i></div>
+                        <span class="step-label">Expand Grid</span>
+                    </div>
+                    <div class="step-line" id="line3"></div>
+                    <div class="step-node" id="step4">
+                        <div class="step-circle"><i data-lucide="check-circle-2"></i></div>
+                        <span class="step-label">High-Res CDN</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gallery Dashboard Section (Hidden until scraped) -->
+            <section id="gallerySection" class="gallery-section hidden">
+                <!-- Gallery Top Info & Action Toolbar -->
+                <div class="gallery-toolbar glass-panel">
+                    <div class="post-meta-badge">
+                        <div class="meta-icon">
+                            <i data-lucide="images"></i>
+                        </div>
+                        <div class="meta-details">
+                            <h3 id="galleryTitle">Found 0 High-Res Photos</h3>
+                            <p id="galleryPostId" class="post-id-text">Post ID: -</p>
+                        </div>
+                    </div>
+
+                    <div class="gallery-action-buttons">
+                        <button type="button" id="btnSelectAll" class="btn-action glass-btn">
+                            <i data-lucide="check-square"></i> <span id="selectAllText">Select All</span>
+                        </button>
+                        <div class="album-folder-wrap" title="Name a custom folder for your downloads">
+                            <i data-lucide="folder" class="album-folder-icon"></i>
+                            <input type="text" id="zipAlbumName" placeholder="Album folder name (e.g. My_Photos)" class="album-folder-input" />
+                        </div>
+                        <button type="button" id="btnChooseFolder" class="btn-action btn-download-primary" title="Choose a folder on your computer to save all photos directly into that folder">
+                            <i data-lucide="folder-down"></i> Save to Selected Folder (<span id="selectedCountPicker">0</span>)
+                        </button>
+                        <button type="button" id="btnDownloadZip" class="btn-action btn-zip" title="Downloads selected photos directly onto YOUR current device (phone/PC) as a ZIP file">
+                            <i data-lucide="archive"></i> Download ZIP (<span id="selectedCountZip">0</span>)
+                        </button>
+                        <button type="button" id="btnDownloadIndividual" class="btn-action glass-btn" title="Download each selected photo directly as an individual image file onto this device">
+                            <i data-lucide="files"></i> Download Files (<span id="selectedCountFiles">0</span>)
+                        </button>
+                        <button type="button" id="btnDownloadLocal" class="btn-action glass-btn" title="Save photos directly into the host machine's filesystem">
+                            <i data-lucide="hard-drive"></i> Save to Host Server (<span id="selectedCount">0</span>)
+                        </button>
+                        <button type="button" id="btnOpenFolder" class="btn-action btn-open-finder hidden" title="Open host destination directory in file manager">
+                            <i data-lucide="folder-open"></i> Open in Finder
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customizable Destination Location Bar (Host Machine) -->
+                <div class="gallery-path-bar glass-panel">
+                    <div class="path-bar-label">
+                        <i data-lucide="server"></i>
+                        <span>Host Server Folder:</span>
+                    </div>
+                    <div class="path-input-wrap">
+                        <input 
+                            type="text" 
+                            id="galleryOutputDir" 
+                            placeholder="Destination directory on host computer (e.g. ~/Downloads/Facebook_Photos, ~/Desktop/Album, etc.)"
+                            class="gallery-path-input"
+                        />
+                    </div>
+                    <div class="path-presets-chips">
+                        <button type="button" class="preset-chip" data-path="~/Downloads">Downloads</button>
+                        <button type="button" class="preset-chip" data-path="~/Desktop/FB_Photos">Desktop</button>
+                        <button type="button" class="preset-chip" data-path="./downloads">Default</button>
+                    </div>
+                </div>
+
+                <div class="device-save-hint">
+                    <i data-lucide="smartphone"></i>
+                    <span><strong>Connecting from a phone or another PC?</strong> Click <strong>Download to This Device (ZIP)</strong> or the download button on any photo card to save images directly to your own device.</span>
+                </div>
+
+                <!-- Photos Grid -->
+                <div id="photosGrid" class="photos-grid">
+                    <!-- Dynamic Media Item Cards Injected via JS -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Facebook Post Image Downloader Pro • Built with Playwright, FastAPI & Vanilla Modern Web Standards</p>
+        </footer>
+    </div>
+
+    <!-- Fullscreen Lightbox Modal -->
+    <div id="lightboxModal" class="lightbox-modal hidden">
+        <div class="lightbox-backdrop"></div>
+        <div class="lightbox-content">
+            <div class="lightbox-header">
+                <div class="lightbox-info">
+                    <span id="lightboxIndex" class="lightbox-badge">Photo 1 of 5</span>
+                    <span id="lightboxDimensions" class="lightbox-badge-dim">2048 × 1536 px</span>
+                </div>
+                <div class="lightbox-controls">
+                    <button id="btnLightboxDownload" class="btn-icon-round" title="Download Photo">
+                        <i data-lucide="download"></i>
+                    </button>
+                    <button id="btnLightboxCopy" class="btn-icon-round" title="Copy CDN Link">
+                        <i data-lucide="copy"></i>
+                    </button>
+                    <button id="btnLightboxClose" class="btn-icon-round" title="Close (Esc)">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="lightbox-body">
+                <button id="btnLightboxPrev" class="lightbox-nav btn-nav-left" title="Previous (←)">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+                <div class="lightbox-img-wrapper">
+                    <img id="lightboxImg" src="" alt="Facebook Photo Full Resolution" />
+                </div>
+                <button id="btnLightboxNext" class="lightbox-nav btn-nav-right" title="Next (→)">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health & Info Modal -->
+    <div id="healthModal" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i data-lucide="cpu" class="modal-icon"></i>
+                    <h3>System & Engine Status</h3>
+                </div>
+                <button id="btnCloseHealthModal" class="btn-icon glass-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="status-row">
+                    <span class="status-label">Playwright Chromium:</span>
+                    <span id="modalChromiumStatus" class="status-val text-green">Ready</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Host OS:</span>
+                    <span id="modalOs" class="status-val">macOS</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Python Environment:</span>
+                    <span id="modalPython" class="status-val">3.9+</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Disk Storage Status:</span>
+                    <span id="modalDiskStatus" class="status-val text-green">Writable (./downloads)</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">📱 Local Network (LAN):</span>
+                    <span id="modalNetworkUrl" class="status-val code-font">http://...:8000</span>
+                </div>
+                <div class="modal-hint">
+                    <p><strong>Local Network Access Enabled:</strong> You can open the Downloader from your phone, tablet, or another computer on the same Wi-Fi using the Network URL above.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Folder Guide Modal -->
+    <div id="folderGuideModal" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel folder-guide-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i data-lucide="folder-cog" class="modal-icon text-indigo"></i>
+                    <h3>Save Photos to Your Computer</h3>
+                </div>
+                <button id="btnCloseFolderGuideModal" class="btn-icon glass-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="guide-intro">
+                    <p>Web browsers require a <strong>Secure Context (HTTPS or Localhost)</strong> to allow websites to directly browse your computer's local hard drive folders. Here are the 3 easiest ways to save and organize your photos:</p>
+                </div>
+
+                <div class="guide-steps">
+                    <div class="guide-step-card">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>Download as Named Folder ZIP (Recommended)</h4>
+                            <p>Type your preferred folder name in the <strong>Album folder name</strong> box and click <strong>Download ZIP</strong>. When you unzip, it automatically creates that exact folder with all photos inside!</p>
+                        </div>
+                    </div>
+
+                    <div class="guide-step-card">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>Enable "Ask Where to Save" in Browser</h4>
+                            <p>In Chrome or Edge settings (<code>chrome://settings/downloads</code>), turn on <strong>"Ask where to save each file before downloading"</strong>. Your computer will then prompt you to choose a folder on every download.</p>
+                        </div>
+                    </div>
+
+                    <div class="guide-step-card">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Connect via Local HTTPS</h4>
+                            <p>If the server host started the app with <code>--ssl</code>, open <strong>https://...</strong> in your browser to unlock the native folder selector on your computer.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-modal-actions">
+                    <button type="button" id="btnModalTriggerZip" class="btn-action btn-download-primary">
+                        <i data-lucide="archive"></i> Download ZIP Now
+                    </button>
+                    <button type="button" id="btnModalTriggerFiles" class="btn-action glass-btn">
+                        <i data-lucide="files"></i> Download Individual Files
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

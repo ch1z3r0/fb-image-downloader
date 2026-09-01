@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fb-image-downloader"
+version = "1.0.0"
+description = "Production-grade Facebook Post Image Downloader CLI"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "playwright>=1.40.0",
+    "httpx>=0.25.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.scripts]
+fb-downloader = "fb_downloader.cli:app"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
