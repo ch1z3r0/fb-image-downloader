@@ -527,50 +527,30 @@ class FacebookScraper:
 
             seen_keys: Set[str] = set()
             first_seen_key: Optional[str] = None
-            consecutive_unresponsive = 0
 
-            # Step through carousel (works for clicked thumbnail or direct photo permalink)
-            for step in range(self.config.carousel_max_steps):
-                current_img_url = await self._get_theater_image_url(page)
-                if current_img_url:
-                    cleaned = clean_cdn_url(current_img_url)
-                    photo_key = extract_photo_key(cleaned)
+            async def get_current_theater_state():
+                return await page.evaluate(
+                    """
+                    () => {
+                        const imgs = Array.from(document.querySelectorAll('img')).filter(i => {
+                            const src = i.src || '';
+                            return src.includes('fbcdn.net') && (i.naturalWidth > 200 || i.width > 200);
+                        });
+                        imgs.sort((a,b) => (b.naturalWidth || b.width) - (a.naturalWidth || a.width));
+                        const curr_img = imgs.length > 0 ? imgs[0].src : null;
+                        const width = imgs.length > 0 ? (imgs[0].naturalWidth || imgs[0].width) : 0;
+                        const height = imgs.length > 0 ? (imgs[0].naturalHeight || imgs[0].height) : 0;
+                        return {
+                            url: curr_img,
+                            width: width,
+                            height: height,
+                            page_url: window.location.href,
+                        };
+                    }
+                    """
+                )
 
-                    if photo_key:
-                        if first_seen_key is None:
-                            first_seen_key = photo_key
-                        elif photo_key == first_seen_key and len(items) >= 10:
-                            logger.debug(f"Looped back to first photo after {len(items)} items. Album scan complete.")
-                            break
-
-                        if photo_key not in seen_keys:
-                            seen_keys.add(photo_key)
-                            consecutive_unresponsive = 0
-
-                            # Extract photo_id if available in page url
-                            current_url = page.url
-                            fbid = None
-                            if "fbid=" in current_url:
-                                fbid = parse_qs(urlparse(current_url).query).get("fbid", [None])[0]
-
-                            items.append(MediaItem(url=cleaned, photo_id=fbid, index=len(items) + 1))
-                            if len(items) % 25 == 0 or len(items) <= 5:
-                                logger.debug(f"Discovered carousel photo #{len(items)}")
-                        else:
-                            consecutive_unresponsive += 1
-                            if consecutive_unresponsive >= 90:
-                                logger.debug("Photo did not advance after 90 attempts. Ending carousel scan.")
-                                break
-                    else:
-                        consecutive_unresponsive += 1
-                        if consecutive_unresponsive >= 90:
-                            break
-                else:
-                    consecutive_unresponsive += 1
-                    if consecutive_unresponsive >= 90:
-                        break
-
-                # Trigger Next click via JavaScript and ArrowRight
+            async def trigger_next_action():
                 await page.evaluate(
                     """
                     () => {
@@ -580,7 +560,72 @@ class FacebookScraper:
                     """
                 )
                 await page.keyboard.press("ArrowRight")
-                await asyncio.sleep(0.24)
+
+            # Step through carousel adaptively — handles slow & fast internet speeds without skipping
+            for step in range(self.config.carousel_max_steps):
+                state = await get_current_theater_state()
+                img_url = state.get("url")
+                curr_page_url = state.get("page_url", "")
+
+                fbid = None
+                if "fbid=" in curr_page_url:
+                    fbid = parse_qs(urlparse(curr_page_url).query).get("fbid", [None])[0]
+
+                cleaned = clean_cdn_url(img_url) if img_url else None
+                photo_key = extract_photo_key(cleaned) if cleaned else None
+
+                if photo_key:
+                    if first_seen_key is None:
+                        first_seen_key = photo_key
+                    elif photo_key == first_seen_key and len(items) >= 10:
+                        logger.debug(f"Looped back to first photo after {len(items)} items. Album scan complete.")
+                        break
+
+                    if photo_key not in seen_keys:
+                        seen_keys.add(photo_key)
+                        items.append(
+                            MediaItem(
+                                url=cleaned,
+                                photo_id=fbid,
+                                width=state.get("width") or None,
+                                height=state.get("height") or None,
+                                index=len(items) + 1,
+                            )
+                        )
+                        if len(items) % 25 == 0 or len(items) <= 5:
+                            logger.debug(f"Discovered carousel photo #{len(items)}")
+
+                # Advance to next photo with adaptive wait
+                prev_photo_key = photo_key
+                prev_fbid = fbid
+
+                await trigger_next_action()
+
+                # Adaptively wait for photo or URL to change (up to 15s per photo for slow connections)
+                changed = False
+                for poll_idx in range(100):  # 100 * 0.15s = 15s max per transition
+                    await asyncio.sleep(0.15)
+                    new_state = await get_current_theater_state()
+                    new_url = new_state.get("url")
+                    new_cleaned = clean_cdn_url(new_url) if new_url else None
+                    new_pk = extract_photo_key(new_cleaned) if new_cleaned else None
+                    new_fbid = None
+                    if "fbid=" in new_state.get("page_url", ""):
+                        new_fbid = parse_qs(urlparse(new_state["page_url"]).query).get("fbid", [None])[0]
+
+                    # Transition succeeded if either photo key or fbid changed
+                    if (new_pk and new_pk != prev_photo_key) or (new_fbid and new_fbid != prev_fbid):
+                        changed = True
+                        break
+
+                    # Retry next click if stalled after 2s / 5s / 9s (handles dropped events on slow network)
+                    if poll_idx in (14, 34, 60):
+                        await trigger_next_action()
+
+                if not changed:
+                    logger.debug(f"Carousel reached end of album after {len(items)} photos (no change after 15s).")
+                    break
+
 
         except Exception as e:
             logger.debug(f"Theater carousel traversal ended/skipped: {e}")
