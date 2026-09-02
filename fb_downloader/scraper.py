@@ -158,60 +158,85 @@ class FacebookScraper:
 
             # 5. Strategy A: Extract high-res media from DOM <img> elements
             dom_items = await self._extract_from_dom_images(page)
-            for item in dom_items:
-                if item.url not in seen_urls:
-                    seen_urls.add(item.url)
-                    discovered_items.append(item)
 
-            logger.debug(f"Discovered {len(discovered_items)} images from initial DOM elements.")
+            logger.debug(f"DOM strategy found {len(dom_items)} images.")
 
             # 6. Strategy B: Extract full album grid via media set page if present
             set_items = await self._extract_via_media_set(page)
-            for item in set_items:
-                if item.url not in seen_urls:
-                    seen_urls.add(item.url)
-                    discovered_items.append(item)
 
-            logger.debug(f"Total discovered after media set scan: {len(discovered_items)}")
+            logger.debug(f"Media set strategy found {len(set_items)} images.")
 
-            # 7. Strategy C: Interact with photo thumbnails & theater carousel walking
+            # 7. Strategy C: Theater carousel — walks photos in Facebook's original post order
             theater_items = await self._extract_via_theater_carousel(page)
-            for item in theater_items:
-                if item.url not in seen_urls:
-                    seen_urls.add(item.url)
-                    discovered_items.append(item)
 
-            logger.debug(f"Total discovered after theater check: {len(discovered_items)}")
+            logger.debug(f"Theater carousel found {len(theater_items)} images (original post order).")
 
             # 8. Strategy D: Extract high-res media from embedded JSON scripts
             json_items = await self._extract_from_json_scripts(page)
-            for item in json_items:
-                if item.url not in seen_urls:
-                    seen_urls.add(item.url)
-                    discovered_items.append(item)
 
-            # 9. Strategy E: Merge valid network intercepted photo URLs
+            logger.debug(f"JSON strategy found {len(json_items)} images.")
+
+            # --- Merge with order preservation ---
+            # Priority: theater carousel defines the canonical order (it literally walks left→right
+            # in the post). Other strategies add any photos the carousel missed (appended at end).
+            #
+            # Build a photo-key → best item map from ALL strategies first (for resolution upgrades),
+            # then reconstruct the final list in carousel order followed by extras.
+
+            # Step 1: collect all candidates into a best-resolution map
+            all_candidates: List[MediaItem] = [
+                *theater_items,
+                *dom_items,
+                *set_items,
+                *json_items,
+            ]
             for net_url in intercepted_network_urls:
-                if net_url not in seen_urls and is_valid_cdn_image_url(net_url):
-                    seen_urls.add(net_url)
-                    discovered_items.append(MediaItem(url=net_url))
+                if is_valid_cdn_image_url(net_url):
+                    all_candidates.append(MediaItem(url=net_url))
 
-            # Deduplicate by unique photo key so each photo is included once at highest resolution
-            unique_media_map: Dict[str, MediaItem] = {}
-            for itm in discovered_items:
+            best_by_key: Dict[str, MediaItem] = {}
+            for itm in all_candidates:
                 key = extract_photo_key(itm.url)
-                if key not in unique_media_map:
-                    unique_media_map[key] = itm
+                if not key:
+                    continue
+                if key not in best_by_key:
+                    best_by_key[key] = itm
                 else:
-                    existing = unique_media_map[key]
+                    existing = best_by_key[key]
                     ex_area = (existing.width or 0) * (existing.height or 0)
                     new_area = (itm.width or 0) * (itm.height or 0)
                     if new_area > ex_area:
-                        unique_media_map[key] = itm
+                        best_by_key[key] = itm
 
-            final_items = list(unique_media_map.values())
+            # Step 2: lay out in carousel order first
+            ordered_keys: List[str] = []
+            seen_keys: Set[str] = set()
 
-            # Re-index items
+            for itm in theater_items:
+                k = extract_photo_key(itm.url)
+                if k and k not in seen_keys:
+                    seen_keys.add(k)
+                    ordered_keys.append(k)
+
+            # Step 3: append extras from other strategies (not in carousel) at the end
+            for itm in (*dom_items, *set_items, *json_items):
+                k = extract_photo_key(itm.url)
+                if k and k not in seen_keys and k in best_by_key:
+                    seen_keys.add(k)
+                    ordered_keys.append(k)
+
+            # Step 4: handle any network-intercepted items with no photo key (rare)
+            keyless_items: List[MediaItem] = []
+            for net_url in intercepted_network_urls:
+                cleaned = clean_cdn_url(net_url)
+                k = extract_photo_key(cleaned)
+                if not k and is_valid_cdn_image_url(cleaned) and cleaned not in seen_urls:
+                    seen_urls.add(cleaned)
+                    keyless_items.append(MediaItem(url=cleaned))
+
+            final_items = [best_by_key[k] for k in ordered_keys] + keyless_items
+
+            # Re-index items in their final order
             for idx, itm in enumerate(final_items, start=1):
                 itm.index = idx
                 if not itm.suggested_filename:
