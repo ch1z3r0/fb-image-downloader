@@ -20,7 +20,7 @@ class ScraperConfig:
     page_timeout_ms: int = 40000
     navigation_timeout_ms: int = 35000
     modal_wait_ms: int = 2000
-    carousel_max_steps: int = 800
+    carousel_max_steps: int = 2500
 
 
 @dataclass(frozen=True)

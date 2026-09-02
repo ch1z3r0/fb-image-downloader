@@ -558,16 +558,16 @@ class FacebookScraper:
                                 logger.debug(f"Discovered carousel photo #{len(items)}")
                         else:
                             consecutive_unresponsive += 1
-                            if consecutive_unresponsive >= 60:
-                                logger.debug("Photo did not advance after 60 attempts. Ending carousel scan.")
+                            if consecutive_unresponsive >= 90:
+                                logger.debug("Photo did not advance after 90 attempts. Ending carousel scan.")
                                 break
                     else:
                         consecutive_unresponsive += 1
-                        if consecutive_unresponsive >= 60:
+                        if consecutive_unresponsive >= 90:
                             break
                 else:
                     consecutive_unresponsive += 1
-                    if consecutive_unresponsive >= 60:
+                    if consecutive_unresponsive >= 90:
                         break
 
                 # Trigger Next click via JavaScript and ArrowRight
